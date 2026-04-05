@@ -1,0 +1,443 @@
+{
+  "project": "MoodFlicker",
+  "branchName": "codex/mood-flicker-v1",
+  "description": "Hafif, hızlı ve sürtünmesiz bir mood tracking deneyimi — kullanıcılar 2-5 saniyede ruh hallerini kaydeder, zamanla trendlerini görür.",
+  "docsPath": "docs/mood-flicker",
+  "bootstrapContext": {
+    "workspacePath": "/Users/mcan/mood-flicker",
+    "baseBranch": "main",
+    "workingBranch": "codex/mood-flicker-v1",
+    "validationBaseline": {
+      "prepareCommand": "./Scripts/bootstrap.sh",
+      "buildCommand": "xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO",
+      "testCommand": "./Scripts/test.sh",
+      "runCommand": "Open MoodFlicker.xcodeproj in Xcode and run on simulator",
+      "smokeCommand": "Build MoodFlicker scheme successfully",
+      "smokeScenario": "App launches and shows RootView with mood check-in screen"
+    }
+  },
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "parentStoryId": "MF-001",
+      "lineage": ["MF-001"],
+      "title": "Emoji Grid UI Component",
+      "description": "Implement the emoji grid component for mood selection with 5 emoji options (😊 😐 😔 😤 😰). Includes selection state, visual feedback (scale animation, opacity changes), and haptic feedback on selection.",
+      "acceptanceCriteria": [
+        "5 emoji displayed in grid layout with 48pt size and 60x60pt touch targets",
+        "Selected emoji scales to 1.1x with visual highlight",
+        "Unselected emojis have 0.6 opacity",
+        "Haptic feedback (light) triggered on selection",
+        "VoiceOver support with proper labels and hints"
+      ],
+      "dependencies": [],
+      "validation": {
+        "level": "build",
+        "runtimeCritical": true,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": ["Emoji grid renders with 5 emoji buttons", "Tapping emoji triggers selection state change"],
+        "scenarios": ["Emoji selection updates UI state correctly", "Accessibility labels are readable by VoiceOver"],
+        "notes": "This is the core UI component. Must be runtime validated as it affects the primary user flow."
+      },
+      "priority": 1,
+      "status": "done",
+      "notes": "Implementation Boundary: Sadece emoji grid UI ve seçim mekanizması. SwiftData kaydı sonraki task'ta. PRD refs: PR-001. UX refs: Emoji Grid component."
+    },
+    {
+      "id": "TASK-002",
+      "parentStoryId": "MF-002",
+      "lineage": ["MF-002"],
+      "title": "Intensity Slider Component",
+      "description": "Implement the intensity slider for adjusting mood intensity. Slider appears after emoji selection with fade + slide up animation. Supports 3 levels (low/medium/high) with mood-colored track fill.",
+      "acceptanceCriteria": [
+        "Slider appears with fade + slide up animation after emoji selection",
+        "Default value set to 'medium' position",
+        "Haptic feedback (selection changed) on value change",
+        "Track fill color matches selected mood color",
+        "VoiceOver announces current value and adjustability"
+      ],
+      "dependencies": ["TASK-001"],
+      "validation": {
+        "level": "build",
+        "runtimeCritical": true,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": ["Slider appears after emoji selection", "Slider value changes update track fill color"],
+        "scenarios": ["Slider animation works smoothly", "Haptic feedback triggers on value changes"],
+        "notes": "UI component that depends on emoji selection state."
+      },
+      "priority": 2,
+      "status": "done",
+      "notes": "Implementation Boundary: Slider UI, değer tutma, görsel feedback. SwiftData entegrasyonu sonraki task'ta. PRD refs: PR-002. UX refs: Intensity Slider component."
+    },
+    {
+      "id": "TASK-003",
+      "parentStoryId": "MF-003",
+      "lineage": ["MF-003"],
+      "title": "Tag Chips Component",
+      "description": "Implement tag chips for optional mood context. Horizontal scrollable list with toggle selection, max 3 limit with shake animation and toast when exceeded. Fixed tag list: yorgun, enerjik, anksiyetik, sakin, stresli, üretken, sosyal, uykusuz.",
+      "acceptanceCriteria": [
+        "Tag chips displayed in horizontal scroll view",
+        "Toggle selection with filled vs border states",
+        "Max 3 tags limit enforced with shake animation on 4th attempt",
+        "Toast message 'En fazla 3 etiket seçebilirsin' on limit exceeded",
+        "VoiceOver announces selected/unselected state"
+      ],
+      "dependencies": ["TASK-001"],
+      "validation": {
+        "level": "build",
+        "runtimeCritical": false,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": [],
+        "scenarios": ["Tag selection toggles correctly", "Max 3 limit enforced with feedback"],
+        "notes": "Self-contained UI component."
+      },
+      "priority": 3,
+      "status": "done",
+      "notes": "Implementation Boundary: Etiket chip UI, seçim mekanizması, maksimum 3 limiti. Akıllı öneriler P1'de (MF-011). PRD refs: PR-003. UX refs: Tag Chips component."
+    },
+    {
+      "id": "TASK-004",
+      "parentStoryId": "MF-004",
+      "lineage": ["MF-004"],
+      "title": "MoodEntry SwiftData Model",
+      "description": "Create the SwiftData model for mood entries with id, emoji, intensity, tags array, and timestamp fields. Includes automatic timestamp generation on creation.",
+      "acceptanceCriteria": [
+        "MoodEntry model with id, emoji, intensity, tags[], timestamp fields",
+        "Automatic timestamp generation on record creation",
+        "UTC storage with local timezone display conversion",
+        "Model supports SwiftData CloudKit sync (iOS 17+)"
+      ],
+      "dependencies": [],
+      "validation": {
+        "level": "build",
+        "runtimeCritical": false,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": [],
+        "scenarios": ["Model compiles successfully", "Timestamp auto-generates on init"],
+        "notes": "Foundation data model. No runtime validation needed until integrated with UI."
+      },
+      "priority": 4,
+      "status": "done",
+      "notes": "Implementation Boundary: Otomatik timestamp oluşturma. SwiftData modelinde Date alanı. PRD refs: PR-004."
+    },
+    {
+      "id": "TASK-005",
+      "parentStoryId": "MF-005",
+      "lineage": ["MF-005"],
+      "title": "SwiftData Persistence Layer",
+      "description": "Implement SwiftData CRUD operations and persistence service. Background thread writes, error handling with retry UI, and data retrieval for display.",
+      "acceptanceCriteria": [
+        "Background thread write operations for mood entries",
+        "Data persists across app restarts",
+        "UI remains responsive during writes (spinner on save button)",
+        "Error handling with 'Kaydedilemedi. Tekrar dene.' message and retry button",
+        "SwiftData container configured for CloudKit sync"
+      ],
+      "dependencies": ["TASK-001", "TASK-002", "TASK-003", "TASK-004"],
+      "validation": {
+        "level": "runtime",
+        "runtimeCritical": true,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": ["Mood entry saves to SwiftData", "Saved entries persist after app restart"],
+        "scenarios": ["Full check-in flow saves data correctly", "Error state shows retry UI", "Background write doesn't block UI"],
+        "notes": "Critical integration task. Affects data integrity and user trust. Runtime validation required."
+      },
+      "priority": 5,
+      "status": "done",
+      "notes": "Implementation Boundary: SwiftData model, CRUD operasyonları, background write. PRD refs: PR-005."
+    },
+    {
+      "id": "TASK-006",
+      "parentStoryId": "MF-006",
+      "lineage": ["MF-006"],
+      "title": "Daily Trend Chart View",
+      "description": "Implement daily trend view using Swift Charts. Shows last 24 hours mood distribution as bar chart with tooltips on tap. Includes empty state with illustration.",
+      "acceptanceCriteria": [
+        "Bar chart showing last 24 hours mood distribution",
+        "Tooltip on bar tap showing record count and details",
+        "Empty state with illustration and 'Henüz kaydın yok' message",
+        "VoiceOver support announcing chart summary",
+        "Chart colors match mood colors"
+      ],
+      "dependencies": ["TASK-005"],
+      "validation": {
+        "level": "runtime",
+        "runtimeCritical": false,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": [],
+        "scenarios": ["Chart renders with data", "Empty state shows when no data", "Tooltips display on interaction"],
+        "notes": "Requires persisted data to display."
+      },
+      "priority": 6,
+      "status": "done",
+      "notes": "Implementation Boundary: Günlük chart UI, Swift Charts kullanımı, veri aggregation. PRD refs: PR-006. UX refs: Trendler screen."
+    },
+    {
+      "id": "TASK-007",
+      "parentStoryId": "MF-007",
+      "lineage": ["MF-007"],
+      "title": "Weekly Trend Chart View",
+      "description": "Implement weekly trend view with line chart showing 7-day mood averages. Includes summary cards for weekly average and total record count.",
+      "acceptanceCriteria": [
+        "Line chart showing 7-day daily average mood",
+        "Summary cards showing weekly average mood and total record count",
+        "Tooltip on data point tap showing day's average and record count",
+        "X-axis shows day names (Pzt, Sal, etc.)",
+        "Y-axis shows mood score (1-5)"
+      ],
+      "dependencies": ["TASK-005"],
+      "validation": {
+        "level": "build",
+        "runtimeCritical": false,
+        "commands": ["swiftc -parse App/Features/Mood/Presentation/WeeklyTrendChartView.swift", "swiftc -parse App/Features/Mood/Presentation/TrendsView.swift"],
+        "miniScenarios": [],
+        "scenarios": ["Weekly chart aggregates data correctly", "Summary cards show accurate stats"],
+        "notes": "Requires persisted data."
+      },
+      "priority": 7,
+      "status": "done",
+      "notes": "Implementation Boundary: Haftalık chart UI, 7 günlük aggregation, ortalama hesaplama. PRD refs: PR-007. UX refs: Trendler screen."
+    },
+    {
+      "id": "TASK-008",
+      "parentStoryId": "MF-008",
+      "lineage": ["MF-008"],
+      "title": "Monthly Trend Chart View",
+      "description": "Implement monthly trend view with scrollable timeline showing daily averages for current month. Allows navigation to previous months.",
+      "acceptanceCriteria": [
+        "Line chart showing current month's daily average mood",
+        "Scrollable timeline to navigate previous months",
+        "Tap on day shows all records for that day",
+        "X-axis shows day numbers (1-31)",
+        "Zoom/pan support (optional)"
+      ],
+      "dependencies": ["TASK-005"],
+      "validation": {
+        "level": "runtime",
+        "runtimeCritical": false,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": [],
+        "scenarios": ["Monthly view shows correct data range", "Navigation to previous months works"],
+        "notes": "Requires persisted data."
+      },
+      "priority": 8,
+      "status": "done",
+      "notes": "Implementation Boundary: Aylık chart UI, günlük ortalama aggregation, scrollable timeline. PRD refs: PR-008. UX refs: Trendler screen."
+    },
+    {
+      "id": "TASK-009",
+      "parentStoryId": "MF-009",
+      "lineage": ["MF-009"],
+      "title": "WidgetKit Integration",
+      "description": "Implement WidgetKit support with small, medium, and large widget sizes. Widgets display emoji grid and launch app with pre-selected emoji via App Intents.",
+      "acceptanceCriteria": [
+        "Small widget: 1 emoji display",
+        "Medium widget: 3 emoji horizontal",
+        "Large widget: 5 emoji + last record info",
+        "App Intent to launch app with pre-selected emoji",
+        "Widget shows 'Son kayıt: X saat önce' when available",
+        "iOS 17+ interactivity support"
+      ],
+      "dependencies": ["TASK-001", "TASK-005"],
+      "validation": {
+        "level": "runtime",
+        "runtimeCritical": true,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": ["Widget renders in all sizes", "Tapping widget emoji launches app"],
+        "scenarios": ["App Intent passes selected emoji correctly", "Widget updates with last record info"],
+        "notes": "Widget is a key differentiator. Runtime validation required. iOS 17+ interactivity has limitations - fallback flow needed."
+      },
+      "priority": 9,
+      "status": "done",
+      "notes": "Implementation Boundary: WidgetKit entegrasyonu, App Intents, widget UI (small/medium/large). PRD refs: PR-009. UX refs: Widget component."
+    },
+    {
+      "id": "TASK-010",
+      "parentStoryId": "MF-010",
+      "lineage": ["MF-010"],
+      "title": "iCloud Sync with CloudKit",
+      "description": "Enable SwiftData CloudKit synchronization for cross-device data sync. Includes sync status indicator and iCloud availability check with settings banner.",
+      "acceptanceCriteria": [
+        "Automatic CloudKit sync when iCloud is enabled",
+        "Data appears on second device after sync",
+        "Settings banner when iCloud is disabled",
+        "Non-blocking 'Senkronize ediliyor...' indicator",
+        "Conflict resolution handled by SwiftData"
+      ],
+      "dependencies": ["TASK-005"],
+      "validation": {
+        "level": "runtime",
+        "runtimeCritical": false,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": [],
+        "scenarios": ["Sync enabled in SwiftData container", "iCloud availability check works"],
+        "notes": "Requires physical device or multiple simulators to fully test sync. Build validation is primary check."
+      },
+      "priority": 10,
+      "status": "done",
+      "notes": "Implementation Boundary: SwiftData CloudKit entegrasyonu, sync durum göstergesi. Minimum iOS 17. PRD refs: PR-010."
+    },
+    {
+      "id": "TASK-011",
+      "parentStoryId": "MF-011",
+      "lineage": ["MF-011"],
+      "title": "Smart Tag Suggestions",
+      "description": "Implement rule-based tag suggestions based on selected mood. Different emoji selections prioritize different tags (e.g., 😔 → yorgun, anksiyetik, uykusuz).",
+      "acceptanceCriteria": [
+        "😔/😰 shows 'yorgun', 'anksiyetik', 'uykusuz' first",
+        "😊 shows 'enerjik', 'üretken', 'sosyal' first",
+        "😤 shows 'stresli', 'hayal kırıklığı' first",
+        "Suggested tags appear at start of chip list",
+        "Non-suggested tags still accessible"
+      ],
+      "dependencies": ["TASK-003"],
+      "validation": {
+        "level": "quick",
+        "runtimeCritical": false,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": [],
+        "scenarios": ["Tag suggestions update based on selected emoji"],
+        "notes": "P1 feature. Rule-based logic, no ML in v1."
+      },
+      "priority": 11,
+      "status": "done",
+      "notes": "Implementation Boundary: Mood-etiket mapping, öneri algoritması (basit rule-based). PRD refs: PR-101. UX refs: Etiket Ekleme flow."
+    },
+    {
+      "id": "TASK-012",
+      "parentStoryId": "MF-012",
+      "lineage": ["MF-012"],
+      "title": "Streak Visualization (Gentle)",
+      "description": "Implement streak calculation and gentle UI display. Shows consecutive day count in trends screen, hides after 24h if streak breaks (no reset, just hides).",
+      "acceptanceCriteria": [
+        "Streak count displayed gently in trends screen",
+        "Streak = at least 1 record in last 24 hours",
+        "48+ hours gap = streak pauses (hidden after 24h)",
+        "Positive messaging 'X gündür kendini takip ediyorsun'",
+        "No guilt-inducing messaging on broken streaks"
+      ],
+      "dependencies": ["TASK-005"],
+      "validation": {
+        "level": "quick",
+        "runtimeCritical": false,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": [],
+        "scenarios": ["Streak calculation works correctly", "UI hides appropriately after gap"],
+        "notes": "P1 feature. Focus on gentle, non-pressuring UX."
+      },
+      "priority": 12,
+      "status": "done",
+      "notes": "Implementation Boundary: Streak hesaplama, UI gösterimi, 24h gizleme mantığı. PRD refs: PR-102. UX refs: Trendler screen."
+    },
+    {
+      "id": "TASK-013",
+      "parentStoryId": "MF-013",
+      "lineage": ["MF-013"],
+      "title": "Haptic Feedback System",
+      "description": "Implement comprehensive haptic feedback throughout the app. Different feedback types for emoji selection, intensity changes, success, and error states.",
+      "acceptanceCriteria": [
+        "UIImpactFeedbackGenerator(.light) on emoji selection",
+        "UISelectionFeedbackGenerator() on intensity change",
+        "UINotificationFeedbackGenerator(.success) on save completion",
+        "UINotificationFeedbackGenerator(.error) on error/limit exceeded",
+        "Respects Reduce Motion setting"
+      ],
+      "dependencies": [],
+      "validation": {
+        "level": "quick",
+        "runtimeCritical": false,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": [],
+        "scenarios": ["Haptics trigger on appropriate interactions"],
+        "notes": "P1 feature. Can be implemented independently."
+      },
+      "priority": 13,
+      "status": "done",
+      "notes": "Implementation Boundary: UIImpactFeedbackGenerator, UISelectionFeedbackGenerator, UINotificationFeedbackGenerator kullanımı. PRD refs: PR-103."
+    },
+    {
+      "id": "TASK-014",
+      "parentStoryId": "MF-014",
+      "lineage": ["MF-014"],
+      "title": "Dark Mode Support",
+      "description": "Implement dark mode support with automatic system theme detection and manual override in settings. Ensure WCAG AA contrast compliance.",
+      "acceptanceCriteria": [
+        "Automatic dark mode when system theme is dark",
+        "Manual theme selection in settings (light/dark/system)",
+        "WCAG AA contrast ratio (4.5:1) in dark mode",
+        "Color assets: Background #1C1C1E, Card #2C2C2E, Text #F5F5F7",
+        "Emojis remain unchanged (theme-independent)"
+      ],
+      "dependencies": [],
+      "validation": {
+        "level": "build",
+        "runtimeCritical": false,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": [],
+        "scenarios": ["Dark mode colors apply correctly", "Theme toggle works in settings"],
+        "notes": "P1 feature. Affects all screens, so build validation is appropriate."
+      },
+      "priority": 14,
+      "status": "done",
+      "notes": "Implementation Boundary: Color asset'ler, dark mode palette, sistem temasına uyum. PRD refs: PR-104. UX refs: Color Direction."
+    },
+    {
+      "id": "TASK-015",
+      "parentStoryId": "MF-015",
+      "lineage": ["MF-015"],
+      "title": "Data Export (JSON/CSV)",
+      "description": "Implement data export functionality with format selection (JSON/CSV), date range filtering, and Share Sheet integration. Includes progress indicator for large datasets.",
+      "acceptanceCriteria": [
+        "Format selection: JSON (full data) or CSV (simple analysis)",
+        "Date range selection for export",
+        "Share Sheet integration for file sharing",
+        "'Aktarılacak veri yok' warning when no data",
+        "Progress indicator for 1000+ records",
+        "JSON includes all fields (id, emoji, intensity, tags, timestamp)",
+        "CSV columns: timestamp, emoji, intensity, tags"
+      ],
+      "dependencies": ["TASK-005"],
+      "validation": {
+        "level": "runtime",
+        "runtimeCritical": false,
+        "commands": ["xcodebuild -project MoodFlicker.xcodeproj -scheme MoodFlicker -destination 'platform=iOS Simulator,name=iPhone 16' build CODE_SIGNING_ALLOWED=NO"],
+        "miniScenarios": [],
+        "scenarios": ["Export generates valid JSON/CSV files", "Date range filtering works", "Share Sheet opens correctly"],
+        "notes": "P1 feature. Requires data to export."
+      },
+      "priority": 15,
+      "status": "done",
+      "notes": "Implementation Boundary: Export UI, JSON/CSV generation, Share Sheet entegrasyonu. PRD refs: PR-105. UX refs: Veri Dışa Aktarım flow."
+    }
+  ],
+  "metadata": {
+    "storyCount": 15,
+    "p0Tasks": 10,
+    "p1Tasks": 5,
+    "totalTasks": 15,
+    "firstTask": "TASK-001",
+    "sourceArtifacts": {
+      "stories": "docs/mood-flicker/stories.md",
+      "prd": "docs/mood-flicker/prd.md",
+      "bootstrap": "docs/mood-flicker/bootstrap.md",
+      "ux": "docs/mood-flicker/ux.md"
+    },
+    "handoff": {
+      "nextAgent": "implementation-runner",
+      "requiredArtifacts": ["docs/mood-flicker/tasks.json"],
+      "recommendedArtifacts": [
+        "docs/mood-flicker/prd.md",
+        "docs/mood-flicker/ux.md",
+        "docs/mood-flicker/stories.md",
+        "docs/mood-flicker/bootstrap.md"
+      ],
+      "criticalInputs": {
+        "repoRoot": "/Users/mcan/mood-flicker",
+        "activeBranch": "codex/mood-flicker-v1",
+        "firstTaskId": "TASK-001",
+        "projectFile": "MoodFlicker.xcodeproj",
+        "mainScheme": "MoodFlicker"
+      }
+    }
+  }
+}

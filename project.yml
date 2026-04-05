@@ -1,6 +1,6 @@
 name: MoodFlicker
 options:
-  bundleIdPrefix: com.example
+  bundleIdPrefix: com.moodflicker
   deploymentTarget:
     iOS: "18.0"
 configs:
@@ -40,9 +40,23 @@ targets:
     deploymentTarget: "18.0"
     sources:
       - path: App
+      - path: App/Resources/Colors.xcassets
+        type: folder
     settings:
       base:
         PRODUCT_NAME: MoodFlicker
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleURLTypes:
+          - CFBundleURLName: com.moodflicker.app
+            CFBundleURLSchemes:
+              - moodflicker
+    entitlements:
+      path: App/MoodFlicker.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.moodflicker.app
     scheme:
       gatherCoverageData: true
       testTargets:
@@ -75,3 +89,35 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).uitests$(BUNDLE_ID_SUFFIX)
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: MoodFlicker
+
+  MoodFlickerWidgetExtension:
+    type: appExtension
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: Widget
+    settings:
+      base:
+        PRODUCT_NAME: MoodFlickerWidgetExtension
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).widget
+        INFOPLIST_FILE: Widget/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        LD_RUNPATH_SEARCH_PATHS:
+          - $(inherited)
+          - @executable_path/Frameworks
+          - @executable_path/../../Frameworks
+        SWIFT_VERSION: 6.0
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: MoodFlicker Widget
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    dependencies:
+      - target: MoodFlicker
+        embed: false
+    entitlements:
+      path: Widget/MoodFlickerWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.moodflicker.app
