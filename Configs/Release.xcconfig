@@ -1,0 +1,7 @@
+#include "Base.xcconfig"
+#include? "Secrets.local.xcconfig"
+
+APP_ENVIRONMENT_NAME = Release
+APP_DISPLAY_NAME = Template App
+API_BASE_URL = https://api.example.com
+WEB_SOCKET_URL = wss://api.example.com/ws

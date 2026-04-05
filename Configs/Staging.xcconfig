@@ -1,0 +1,8 @@
+#include "Base.xcconfig"
+#include? "Secrets.local.xcconfig"
+
+APP_ENVIRONMENT_NAME = Staging
+APP_DISPLAY_NAME = Template App Staging
+API_BASE_URL = https://staging-api.example.com
+WEB_SOCKET_URL = wss://staging-api.example.com/ws
+BUNDLE_ID_SUFFIX = .staging

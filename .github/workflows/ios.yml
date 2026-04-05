@@ -1,0 +1,22 @@
+name: iOS CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tooling
+        run: brew install xcodegen swiftlint swiftformat
+
+      - name: Lint
+        run: ./Scripts/lint.sh
+
+      - name: Build and test
+        run: ./Scripts/test.sh

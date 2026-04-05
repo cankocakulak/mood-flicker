@@ -1,0 +1,42 @@
+included:
+  - App
+  - Tests
+  - UITests
+excluded:
+  - .build
+  - build
+  - DerivedData
+  - ios-boilerplate.xcodeproj
+
+disabled_rules:
+  - opening_brace
+
+opt_in_rules:
+  - empty_count
+  - redundant_nil_coalescing
+  - sorted_imports
+  - vertical_whitespace_closing_braces
+
+line_length:
+  warning: 140
+  ignores_comments: true
+  ignores_urls: true
+
+type_body_length:
+  warning: 300
+  error: 450
+
+file_length:
+  warning: 500
+  error: 700
+
+identifier_name:
+  excluded:
+    - id
+    - url
+    - app
+    - ok
+    - xs
+    - sm
+    - md
+    - lg

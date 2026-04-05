@@ -1,0 +1,8 @@
+#include "Base.xcconfig"
+#include? "Secrets.local.xcconfig"
+
+APP_ENVIRONMENT_NAME = Debug
+APP_DISPLAY_NAME = Template App Dev
+API_BASE_URL = http://127.0.0.1:8080
+WEB_SOCKET_URL = ws://127.0.0.1:8080/ws
+BUNDLE_ID_SUFFIX = .debug

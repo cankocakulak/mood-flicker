@@ -1,0 +1,77 @@
+name: ios-boilerplate
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    iOS: "18.0"
+configs:
+  Debug: debug
+  Staging: release
+  Release: release
+configFiles:
+  Debug: Configs/Debug.xcconfig
+  Staging: Configs/Staging.xcconfig
+  Release: Configs/Release.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: 6.0
+    SWIFT_STRICT_CONCURRENCY: complete
+    SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 1.0.0
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_CFBundleDevelopmentRegion: en
+    INFOPLIST_KEY_CFBundleDisplayName: $(APP_DISPLAY_NAME)
+    INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+    INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+    INFOPLIST_KEY_AppEnvironmentName: $(APP_ENVIRONMENT_NAME)
+    INFOPLIST_KEY_AppAPIBaseURL: $(API_BASE_URL)
+    INFOPLIST_KEY_AppWebSocketURL: $(WEB_SOCKET_URL)
+    INFOPLIST_KEY_AppAPIKey: $(API_KEY)
+    PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID)$(BUNDLE_ID_SUFFIX)
+    TARGETED_DEVICE_FAMILY: 1
+packages: {}
+targets:
+  TemplateApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: App
+    settings:
+      base:
+        PRODUCT_NAME: TemplateApp
+    scheme:
+      gatherCoverageData: true
+      testTargets:
+        - TemplateAppTests
+        - TemplateAppUITests
+
+  TemplateAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: Tests
+    dependencies:
+      - target: TemplateApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).tests$(BUNDLE_ID_SUFFIX)
+        GENERATE_INFOPLIST_FILE: YES
+
+  TemplateAppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: UITests
+    dependencies:
+      - target: TemplateApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).uitests$(BUNDLE_ID_SUFFIX)
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: TemplateApp
