@@ -1,5 +1,5 @@
-APP_DISPLAY_NAME = Template App
-APP_BUNDLE_ID = com.example.templateapp
+APP_DISPLAY_NAME = Mood Flicker
+APP_BUNDLE_ID = com.moodflicker.app
 APP_ENVIRONMENT_NAME = Base
 API_BASE_URL = https://api.example.com
 WEB_SOCKET_URL = wss://api.example.com/ws

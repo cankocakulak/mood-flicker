@@ -1,6 +1,6 @@
-# iOS Boilerplate
+# Mood Flicker
 
-A template-ready SwiftUI starter for teams that want a clean composition root, backend-friendly boundaries, and working test/tooling setup from day one.
+A SwiftUI iOS app for mood tracking and visualization.
 
 ## What This Repo Is
 
@@ -46,8 +46,8 @@ It does not try to choose your full product architecture for you.
 ## Quick Start
 
 1. Run `./Scripts/bootstrap.sh`
-2. Open `ios-boilerplate.xcodeproj`
-3. Build the `TemplateApp` scheme
+2. Open `MoodFlicker.xcodeproj`
+3. Build the `MoodFlicker` scheme
 4. Run `./Scripts/test.sh`
 
 ## Using It As A GitHub Template

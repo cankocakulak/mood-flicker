@@ -29,4 +29,4 @@ fi
 
 ./Scripts/generate_project.sh
 
-echo "Bootstrap complete. Open ios-boilerplate.xcodeproj and build the TemplateApp scheme."
+echo "Bootstrap complete. Open MoodFlicker.xcodeproj and build the MoodFlicker scheme."

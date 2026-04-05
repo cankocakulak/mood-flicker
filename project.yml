@@ -1,4 +1,4 @@
-name: ios-boilerplate
+name: MoodFlicker
 options:
   bundleIdPrefix: com.example
   deploymentTarget:
@@ -34,7 +34,7 @@ settings:
     TARGETED_DEVICE_FAMILY: 1
 packages: {}
 targets:
-  TemplateApp:
+  MoodFlicker:
     type: application
     platform: iOS
     deploymentTarget: "18.0"
@@ -42,36 +42,36 @@ targets:
       - path: App
     settings:
       base:
-        PRODUCT_NAME: TemplateApp
+        PRODUCT_NAME: MoodFlicker
     scheme:
       gatherCoverageData: true
       testTargets:
-        - TemplateAppTests
-        - TemplateAppUITests
+        - MoodFlickerTests
+        - MoodFlickerUITests
 
-  TemplateAppTests:
+  MoodFlickerTests:
     type: bundle.unit-test
     platform: iOS
     deploymentTarget: "18.0"
     sources:
       - path: Tests
     dependencies:
-      - target: TemplateApp
+      - target: MoodFlicker
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).tests$(BUNDLE_ID_SUFFIX)
         GENERATE_INFOPLIST_FILE: YES
 
-  TemplateAppUITests:
+  MoodFlickerUITests:
     type: bundle.ui-testing
     platform: iOS
     deploymentTarget: "18.0"
     sources:
       - path: UITests
     dependencies:
-      - target: TemplateApp
+      - target: MoodFlicker
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).uitests$(BUNDLE_ID_SUFFIX)
         GENERATE_INFOPLIST_FILE: YES
-        TEST_TARGET_NAME: TemplateApp
+        TEST_TARGET_NAME: MoodFlicker

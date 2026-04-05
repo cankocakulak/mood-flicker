@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "35CBE8F70237F3ECDBFD476B"
-               BuildableName = "TemplateApp.app"
-               BlueprintName = "TemplateApp"
-               ReferencedContainer = "container:ios-boilerplate.xcodeproj">
+               BlueprintIdentifier = "FA23354E6CF7EB9BB085B642"
+               BuildableName = "MoodFlicker.app"
+               BlueprintName = "MoodFlicker"
+               ReferencedContainer = "container:MoodFlicker.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,10 +33,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "35CBE8F70237F3ECDBFD476B"
-            BuildableName = "TemplateApp.app"
-            BlueprintName = "TemplateApp"
-            ReferencedContainer = "container:ios-boilerplate.xcodeproj">
+            BlueprintIdentifier = "FA23354E6CF7EB9BB085B642"
+            BuildableName = "MoodFlicker.app"
+            BlueprintName = "MoodFlicker"
+            ReferencedContainer = "container:MoodFlicker.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -45,10 +45,10 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3D8A376C9D54B915B404D376"
-               BuildableName = "TemplateAppTests.xctest"
-               BlueprintName = "TemplateAppTests"
-               ReferencedContainer = "container:ios-boilerplate.xcodeproj">
+               BlueprintIdentifier = "6B6A4AB82C31532D26CDE0A3"
+               BuildableName = "MoodFlickerTests.xctest"
+               BlueprintName = "MoodFlickerTests"
+               ReferencedContainer = "container:MoodFlicker.xcodeproj">
             </BuildableReference>
          </TestableReference>
          <TestableReference
@@ -56,10 +56,10 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "C7BDED250250894E37C05983"
-               BuildableName = "TemplateAppUITests.xctest"
-               BlueprintName = "TemplateAppUITests"
-               ReferencedContainer = "container:ios-boilerplate.xcodeproj">
+               BlueprintIdentifier = "C421160E8616352AC52B8F24"
+               BuildableName = "MoodFlickerUITests.xctest"
+               BlueprintName = "MoodFlickerUITests"
+               ReferencedContainer = "container:MoodFlicker.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -80,10 +80,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "35CBE8F70237F3ECDBFD476B"
-            BuildableName = "TemplateApp.app"
-            BlueprintName = "TemplateApp"
-            ReferencedContainer = "container:ios-boilerplate.xcodeproj">
+            BlueprintIdentifier = "FA23354E6CF7EB9BB085B642"
+            BuildableName = "MoodFlicker.app"
+            BlueprintName = "MoodFlicker"
+            ReferencedContainer = "container:MoodFlicker.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -99,10 +99,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "35CBE8F70237F3ECDBFD476B"
-            BuildableName = "TemplateApp.app"
-            BlueprintName = "TemplateApp"
-            ReferencedContainer = "container:ios-boilerplate.xcodeproj">
+            BlueprintIdentifier = "FA23354E6CF7EB9BB085B642"
+            BuildableName = "MoodFlicker.app"
+            BlueprintName = "MoodFlicker"
+            ReferencedContainer = "container:MoodFlicker.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>

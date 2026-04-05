@@ -50,7 +50,7 @@ if [ -z "$SIMULATOR_ID" ]; then
 fi
 
 xcodebuild test \
-  -project ios-boilerplate.xcodeproj \
-  -scheme TemplateApp \
+  -project MoodFlicker.xcodeproj \
+  -scheme MoodFlicker \
   -destination "id=$SIMULATOR_ID" \
   CODE_SIGNING_ALLOWED=NO
