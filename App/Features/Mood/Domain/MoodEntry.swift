@@ -7,19 +7,19 @@ import SwiftData
 final class MoodEntry {
     /// Unique identifier for the entry
     @Attribute(.unique) var id: UUID
-    
+
     /// The emoji representing the mood (e.g., "😊", "😔")
     var emoji: String
-    
+
     /// The intensity level of the mood (1-3, representing low/medium/high)
     var intensity: Int
-    
+
     /// Optional tags providing context to the mood
     var tags: [String]
-    
+
     /// UTC timestamp when the entry was created
     var timestamp: Date
-    
+
     /// Initializes a new MoodEntry with automatic timestamp generation
     /// - Parameters:
     ///   - emoji: The emoji string representing the mood
@@ -30,16 +30,16 @@ final class MoodEntry {
         emoji: String,
         intensity: Int,
         tags: [String] = [],
-        timestamp: Date = Date()
-    ) {
-        self.id = UUID()
+        timestamp: Date = Date())
+    {
+        id = UUID()
         self.emoji = emoji
         self.intensity = intensity
         self.tags = tags
         // Store as UTC for consistent cloud sync
         self.timestamp = timestamp
     }
-    
+
     /// Convenience initializer from MoodOption and IntensityLevel enums
     /// - Parameters:
     ///   - moodOption: The selected mood option
@@ -48,13 +48,13 @@ final class MoodEntry {
     init(
         moodOption: MoodOption,
         intensityLevel: IntensityLevel,
-        tags: Set<String> = []
-    ) {
-        self.id = UUID()
-        self.emoji = moodOption.rawValue
-        self.intensity = intensityLevel.rawValue
+        tags: Set<String> = [])
+    {
+        id = UUID()
+        emoji = moodOption.rawValue
+        intensity = intensityLevel.rawValue
         self.tags = Array(tags)
-        self.timestamp = Date()
+        timestamp = Date()
     }
 }
 
@@ -67,17 +67,17 @@ extension MoodEntry {
         // When displayed, it will be shown in the user's local timezone
         timestamp
     }
-    
+
     /// Returns the MoodOption enum if the emoji matches a known mood
     var moodOption: MoodOption? {
         MoodOption(rawValue: emoji)
     }
-    
+
     /// Returns the IntensityLevel enum for the stored intensity value
     var intensityLevel: IntensityLevel {
         IntensityLevel(rawValue: intensity) ?? .medium
     }
-    
+
     /// Formatted date string for display in local timezone
     var formattedDate: String {
         let formatter = DateFormatter()
@@ -86,7 +86,7 @@ extension MoodEntry {
         formatter.timeZone = .current
         return formatter.string(from: timestamp)
     }
-    
+
     /// Formatted time string for display
     var formattedTime: String {
         let formatter = DateFormatter()
@@ -95,20 +95,19 @@ extension MoodEntry {
         formatter.timeZone = .current
         return formatter.string(from: timestamp)
     }
-    
+
     /// Returns a score representing the mood (1-5 scale for charting)
     /// Maps emoji to base score, adjusted by intensity
     var moodScore: Int {
-        let baseScore: Int
-        switch emoji {
-        case MoodOption.happy.rawValue: baseScore = 5
-        case MoodOption.neutral.rawValue: baseScore = 3
-        case MoodOption.sad.rawValue: baseScore = 2
-        case MoodOption.angry.rawValue: baseScore = 1
-        case MoodOption.anxious.rawValue: baseScore = 2
-        default: baseScore = 3
+        let baseScore = switch emoji {
+        case MoodOption.happy.rawValue: 5
+        case MoodOption.neutral.rawValue: 3
+        case MoodOption.sad.rawValue: 2
+        case MoodOption.angry.rawValue: 1
+        case MoodOption.anxious.rawValue: 2
+        default: 3
         }
-        
+
         // Adjust by intensity: low intensity reduces impact, high increases
         let intensityModifier = intensity - 2 // -1, 0, or +1
         return max(1, min(5, baseScore + intensityModifier))
@@ -124,7 +123,7 @@ extension MoodEntry {
             entry.timestamp >= start && entry.timestamp <= end
         }
     }
-    
+
     /// Predicate for fetching entries from the last N days
     static func predicateForLastDays(_ days: Int) -> Predicate<MoodEntry> {
         let startDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date()
@@ -132,13 +131,13 @@ extension MoodEntry {
             entry.timestamp >= startDate
         }
     }
-    
+
     /// Predicate for fetching entries for a specific day
     static func predicateForDay(_ date: Date) -> Predicate<MoodEntry> {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
-        
+
         return #Predicate<MoodEntry> { entry in
             entry.timestamp >= startOfDay && entry.timestamp < endOfDay
         }
@@ -153,10 +152,9 @@ extension MoodEntry {
         MoodEntry(
             emoji: MoodOption.happy.rawValue,
             intensity: IntensityLevel.high.rawValue,
-            tags: ["enerjik", "üretken"]
-        )
+            tags: ["enerjik", "üretken"])
     }
-    
+
     /// Array of sample entries for previews
     static var samples: [MoodEntry] {
         [
@@ -181,3 +179,5 @@ extension MoodEntry {
         ]
     }
 }
+
+extension MoodEntry: @unchecked Sendable {}

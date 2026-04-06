@@ -91,7 +91,8 @@ targets:
         TEST_TARGET_NAME: MoodFlicker
 
   MoodFlickerWidgetExtension:
-    type: appExtension
+    type: app-extension
+    subtype: widgetkit-extension
     platform: iOS
     deploymentTarget: "18.0"
     sources:
@@ -104,8 +105,8 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         LD_RUNPATH_SEARCH_PATHS:
           - $(inherited)
-          - @executable_path/Frameworks
-          - @executable_path/../../Frameworks
+          - "@executable_path/Frameworks"
+          - "@executable_path/../../Frameworks"
         SWIFT_VERSION: 6.0
     info:
       path: Widget/Info.plist

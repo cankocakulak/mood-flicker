@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import SwiftData
 
@@ -5,24 +6,23 @@ import SwiftData
 /// Generates JSON and CSV exports of mood entries with date range filtering
 @MainActor
 final class DataExportService: ObservableObject {
-    
     // MARK: - Properties
-    
+
     private let persistenceService: MoodPersistenceService
-    
+
     @Published var isExporting: Bool = false
     @Published var exportProgress: Double = 0.0
     @Published var lastExportError: Error?
     @Published var lastExportedURL: URL?
-    
+
     // MARK: - Initialization
-    
+
     init(persistenceService: MoodPersistenceService) {
         self.persistenceService = persistenceService
     }
-    
+
     // MARK: - Export Operations
-    
+
     /// Exports mood entries to JSON format
     /// - Parameters:
     ///   - entries: The mood entries to export
@@ -31,12 +31,12 @@ final class DataExportService: ObservableObject {
     /// - Throws: Export errors
     func exportToJSON(
         entries: [MoodEntry],
-        dateRange: String? = nil
-    ) async throws -> URL {
+        dateRange: String? = nil) async throws -> URL
+    {
         guard !entries.isEmpty else {
             throw DataExportError.noDataToExport
         }
-        
+
         let exportData = entries.map { entry in
             MoodEntryExport(
                 id: entry.id.uuidString,
@@ -44,24 +44,23 @@ final class DataExportService: ObservableObject {
                 intensity: entry.intensity,
                 tags: entry.tags,
                 timestamp: entry.timestamp,
-                timestampISO8601: ISO8601DateFormatter().string(from: entry.timestamp)
-            )
+                timestampISO8601: ISO8601DateFormatter().string(from: entry.timestamp))
         }
-        
+
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601
-        
+
         let jsonData = try encoder.encode(exportData)
-        
+
         let filename = generateFilename(format: "json", dateRange: dateRange)
         let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-        
+
         try jsonData.write(to: fileURL)
-        
+
         return fileURL
     }
-    
+
     /// Exports mood entries to CSV format
     /// - Parameters:
     ///   - entries: The mood entries to export
@@ -70,37 +69,37 @@ final class DataExportService: ObservableObject {
     /// - Throws: Export errors
     func exportToCSV(
         entries: [MoodEntry],
-        dateRange: String? = nil
-    ) async throws -> URL {
+        dateRange: String? = nil) async throws -> URL
+    {
         guard !entries.isEmpty else {
             throw DataExportError.noDataToExport
         }
-        
+
         var csvString = "timestamp,emoji,intensity,tags\n"
-        
+
         let dateFormatter = ISO8601DateFormatter()
-        
+
         for entry in entries {
             let timestamp = dateFormatter.string(from: entry.timestamp)
             let emoji = entry.emoji
             let intensity = String(entry.intensity)
             let tags = entry.tags.joined(separator: ";")
-            
+
             csvString += "\(timestamp),\(emoji),\(intensity),\"\(tags)\"\n"
         }
-        
+
         guard let csvData = csvString.data(using: .utf8) else {
             throw DataExportError.encodingFailed
         }
-        
+
         let filename = generateFilename(format: "csv", dateRange: dateRange)
         let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-        
+
         try csvData.write(to: fileURL)
-        
+
         return fileURL
     }
-    
+
     /// Fetches and exports entries with progress tracking
     /// - Parameters:
     ///   - format: Export format (json or csv)
@@ -111,53 +110,51 @@ final class DataExportService: ObservableObject {
     func exportEntries(
         format: ExportFormat,
         startDate: Date? = nil,
-        endDate: Date? = nil
-    ) async throws -> URL {
+        endDate: Date? = nil) async throws -> URL
+    {
         await MainActor.run {
             isExporting = true
             exportProgress = 0.0
             lastExportError = nil
         }
-        
+
         defer {
             Task { @MainActor in
                 isExporting = false
                 exportProgress = 1.0
             }
         }
-        
+
         // Fetch entries
-        let entries: [MoodEntry]
-        if let start = startDate, let end = endDate {
-            entries = try await persistenceService.fetchEntries(from: start, to: end)
+        let entries: [MoodEntry] = if let start = startDate, let end = endDate {
+            try await persistenceService.fetchEntries(from: start, to: end)
         } else {
-            entries = try await persistenceService.fetchAllEntries()
+            try await persistenceService.fetchAllEntries()
         }
-        
+
         await MainActor.run {
             exportProgress = 0.5
         }
-        
+
         // Generate date range description for filename
         let dateRangeDescription = generateDateRangeDescription(startDate: startDate, endDate: endDate)
-        
+
         // Export based on format
-        let fileURL: URL
-        switch format {
+        let fileURL: URL = switch format {
         case .json:
-            fileURL = try await exportToJSON(entries: entries, dateRange: dateRangeDescription)
+            try await exportToJSON(entries: entries, dateRange: dateRangeDescription)
         case .csv:
-            fileURL = try await exportToCSV(entries: entries, dateRange: dateRangeDescription)
+            try await exportToCSV(entries: entries, dateRange: dateRangeDescription)
         }
-        
+
         await MainActor.run {
             lastExportedURL = fileURL
             exportProgress = 1.0
         }
-        
+
         return fileURL
     }
-    
+
     /// Checks if there is any data to export
     /// - Returns: True if there are entries to export
     func hasDataToExport() async -> Bool {
@@ -168,7 +165,7 @@ final class DataExportService: ObservableObject {
             return false
         }
     }
-    
+
     /// Gets the count of entries available for export
     /// - Returns: Number of entries
     func getEntryCount() async -> Int {
@@ -179,27 +176,27 @@ final class DataExportService: ObservableObject {
             return 0
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func generateFilename(format: String, dateRange: String?) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let dateString = dateFormatter.string(from: Date())
-        
+
         if let range = dateRange {
             return "mood-flicker-export-\(range)-\(dateString).\(format)"
         } else {
             return "mood-flicker-export-\(dateString).\(format)"
         }
     }
-    
+
     private func generateDateRangeDescription(startDate: Date?, endDate: Date?) -> String? {
         guard startDate != nil || endDate != nil else { return nil }
-        
+
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        
+
         if let start = startDate, let end = endDate {
             return "\(dateFormatter.string(from: start))-to-\(dateFormatter.string(from: end))"
         } else if let start = startDate {
@@ -207,43 +204,52 @@ final class DataExportService: ObservableObject {
         } else if let end = endDate {
             return "until-\(dateFormatter.string(from: end))"
         }
-        
+
         return nil
+    }
+
+    /// Fetches entries for a date range (used by `DataExportView`).
+    func fetchEntriesForDateRange(start: Date, end: Date) async throws -> [MoodEntry] {
+        let calendar = Calendar.current
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: end) ?? end
+        return try await persistenceService.fetchEntries(from: start, to: endOfDay)
     }
 }
 
 // MARK: - Export Format Enum
 
 enum ExportFormat: String, CaseIterable, Identifiable {
-    case json = "json"
-    case csv = "csv"
-    
-    var id: String { rawValue }
-    
+    case json
+    case csv
+
+    var id: String {
+        rawValue
+    }
+
     var displayName: String {
         switch self {
         case .json:
-            return "JSON (Tam Veri)"
+            "JSON (Tam Veri)"
         case .csv:
-            return "CSV (Basit Analiz)"
+            "CSV (Basit Analiz)"
         }
     }
-    
+
     var description: String {
         switch self {
         case .json:
-            return "Tüm alanları içeren detaylı veri formatı"
+            "Tüm alanları içeren detaylı veri formatı"
         case .csv:
-            return "Excel veya analiz için basit tablo formatı"
+            "Excel veya analiz için basit tablo formatı"
         }
     }
-    
+
     var iconName: String {
         switch self {
         case .json:
-            return "curlybraces"
+            "curlybraces"
         case .csv:
-            return "tablecells"
+            "tablecells"
         }
     }
 }
@@ -266,30 +272,30 @@ enum DataExportError: LocalizedError {
     case encodingFailed
     case fileWriteFailed
     case invalidDateRange
-    
+
     var errorDescription: String? {
         switch self {
         case .noDataToExport:
-            return "Aktarılacak veri yok"
+            "Aktarılacak veri yok"
         case .encodingFailed:
-            return "Veri kodlanamadı"
+            "Veri kodlanamadı"
         case .fileWriteFailed:
-            return "Dosya oluşturulamadı"
+            "Dosya oluşturulamadı"
         case .invalidDateRange:
-            return "Geçersiz tarih aralığı"
+            "Geçersiz tarih aralığı"
         }
     }
-    
+
     var failureReason: String? {
         switch self {
         case .noDataToExport:
-            return "Dışa aktarılacak mood kaydı bulunamadı. Önce birkaç kayıt oluşturun."
+            "Dışa aktarılacak mood kaydı bulunamadı. Önce birkaç kayıt oluşturun."
         case .encodingFailed:
-            return "Veri dışa aktarım formatına dönüştürülürken bir hata oluştu."
+            "Veri dışa aktarım formatına dönüştürülürken bir hata oluştu."
         case .fileWriteFailed:
-            return "Geçici dosya oluşturulurken bir hata oluştu."
+            "Geçici dosya oluşturulurken bir hata oluştu."
         case .invalidDateRange:
-            return "Seçilen tarih aralığı geçersiz. Başlangıç tarihi bitiş tarihinden önce olmalıdır."
+            "Seçilen tarih aralığı geçersiz. Başlangıç tarihi bitiş tarihinden önce olmalıdır."
         }
     }
 }

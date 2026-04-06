@@ -1,16 +1,16 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 /// View for exporting mood data with format selection and date range filtering
 struct DataExportView: View {
     @StateObject private var exportService: DataExportService
     @Environment(\.dismiss) private var dismiss
-    
+
     // MARK: - State
-    
+
     @State private var selectedFormat: ExportFormat = .json
     @State private var startDate: Date = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-    @State private var endDate: Date = Date()
+    @State private var endDate: Date = .init()
     @State private var useDateRange: Bool = false
     @State private var entryCount: Int = 0
     @State private var showShareSheet: Bool = false
@@ -18,17 +18,18 @@ struct DataExportView: View {
     @State private var showNoDataAlert: Bool = false
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
-    
+
     // MARK: - Initialization
-    
+
     init(persistenceService: MoodPersistenceService) {
         _exportService = StateObject(wrappedValue: DataExportService(persistenceService: persistenceService))
     }
-    
+
     var body: some View {
         NavigationStack {
             Form {
                 // MARK: - Format Selection
+
                 Section {
                     ForEach(ExportFormat.allCases) { format in
                         Button {
@@ -38,19 +39,19 @@ struct DataExportView: View {
                                 Image(systemName: format.iconName)
                                     .foregroundColor(.accentColor)
                                     .frame(width: 24)
-                                
+
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(format.displayName)
                                         .font(.body)
                                         .foregroundColor(.primary)
-                                    
+
                                     Text(format.description)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
-                                
+
                                 Spacer()
-                                
+
                                 if selectedFormat == format {
                                     Image(systemName: "checkmark.circle.fill")
                                         .foregroundColor(.accentColor)
@@ -64,23 +65,22 @@ struct DataExportView: View {
                 } header: {
                     Text("Format Seçimi")
                 }
-                
+
                 // MARK: - Date Range
+
                 Section {
                     Toggle("Tarih Aralığı Kullan", isOn: $useDateRange)
-                    
+
                     if useDateRange {
                         DatePicker(
                             "Başlangıç",
                             selection: $startDate,
-                            displayedComponents: [.date]
-                        )
-                        
+                            displayedComponents: [.date])
+
                         DatePicker(
                             "Bitiş",
                             selection: $endDate,
-                            displayedComponents: [.date]
-                        )
+                            displayedComponents: [.date])
                     }
                 } header: {
                     Text("Tarih Aralığı")
@@ -91,36 +91,38 @@ struct DataExportView: View {
                         Text("Tüm kayıtları dışa aktarın.")
                     }
                 }
-                
+
                 // MARK: - Data Preview
+
                 Section {
                     HStack {
                         Image(systemName: "doc.text")
                             .foregroundColor(.accentColor)
-                        
+
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Aktarılacak Kayıt")
                                 .font(.body)
-                            
+
                             Text("\(entryCount) kayıt bulundu")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         Spacer()
                     }
                 } header: {
                     Text("Veri Önizleme")
                 }
-                
+
                 // MARK: - Export Button
+
                 Section {
                     Button {
                         performExport()
                     } label: {
                         HStack {
                             Spacer()
-                            
+
                             if exportService.isExporting {
                                 ProgressView()
                                     .scaleEffect(0.8)
@@ -129,7 +131,7 @@ struct DataExportView: View {
                                 Image(systemName: "square.and.arrow.up")
                                 Text("Dışa Aktar")
                             }
-                            
+
                             Spacer()
                         }
                         .font(.headline)
@@ -137,8 +139,7 @@ struct DataExportView: View {
                         .padding(.vertical, 12)
                         .background(
                             RoundedRectangle(cornerRadius: 10)
-                                .fill(canExport ? Color.accentColor : Color.gray)
-                        )
+                                .fill(canExport ? Color.accentColor : Color.gray))
                     }
                     .disabled(!canExport || exportService.isExporting)
                     .listRowBackground(Color.clear)
@@ -160,12 +161,12 @@ struct DataExportView: View {
                 }
             }
             .alert("Aktarılacak Veri Yok", isPresented: $showNoDataAlert) {
-                Button("Tamam", role: .cancel) { }
+                Button("Tamam", role: .cancel) {}
             } message: {
                 Text("Dışa aktarılacak mood kaydı bulunamadı. Önce birkaç kayıt oluşturun.")
             }
             .alert("Hata", isPresented: $showErrorAlert) {
-                Button("Tamam", role: .cancel) { }
+                Button("Tamam", role: .cancel) {}
             } message: {
                 Text(errorMessage)
             }
@@ -193,15 +194,15 @@ struct DataExportView: View {
             }
         }
     }
-    
+
     // MARK: - Helper Properties
-    
+
     private var canExport: Bool {
         entryCount > 0 && !exportService.isExporting
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func loadEntryCount() async {
         if useDateRange {
             do {
@@ -214,7 +215,7 @@ struct DataExportView: View {
             entryCount = await exportService.getEntryCount()
         }
     }
-    
+
     private func performExport() {
         Task {
             // Check if there's data to export
@@ -223,19 +224,17 @@ struct DataExportView: View {
                 showNoDataAlert = true
                 return
             }
-            
+
             do {
-                let fileURL: URL
-                if useDateRange {
-                    fileURL = try await exportService.exportEntries(
+                let fileURL: URL = if useDateRange {
+                    try await exportService.exportEntries(
                         format: selectedFormat,
                         startDate: startDate,
-                        endDate: endDate
-                    )
+                        endDate: endDate)
                 } else {
-                    fileURL = try await exportService.exportEntries(format: selectedFormat)
+                    try await exportService.exportEntries(format: selectedFormat)
                 }
-                
+
                 exportedFileURL = fileURL
                 showShareSheet = true
             } catch let error as DataExportError {
@@ -253,33 +252,18 @@ struct DataExportView: View {
 
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
-    
+
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(
+        UIActivityViewController(
             activityItems: items,
-            applicationActivities: nil
-        )
-        return controller
+            applicationActivities: nil)
     }
-    
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) { }
-}
 
-// MARK: - DataExportService Extension for View
-
-extension DataExportService {
-    /// Fetches entries for a date range (helper for the view)
-    func fetchEntriesForDateRange(start: Date, end: Date) async throws -> [MoodEntry] {
-        // Adjust end date to end of day
-        let calendar = Calendar.current
-        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: end) ?? end
-        return try await persistenceService.fetchEntries(from: start, to: endOfDay)
-    }
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Preview
 
 #Preview {
-    let persistenceService = MoodPersistenceService.preview()
-    return DataExportView(persistenceService: persistenceService)
+    DataExportView(persistenceService: MoodPersistenceService.preview())
 }

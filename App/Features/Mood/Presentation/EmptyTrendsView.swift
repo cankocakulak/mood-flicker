@@ -3,7 +3,7 @@ import SwiftUI
 /// Empty state view for when no mood data is available
 struct EmptyTrendsView: View {
     let onAddEntry: () -> Void
-    
+
     var body: some View {
         VStack(spacing: AppTheme.Spacing.xl) {
             // Illustration
@@ -11,20 +11,20 @@ struct EmptyTrendsView: View {
                 .font(.system(size: 80))
                 .foregroundColor(.secondary.opacity(0.5))
                 .padding()
-            
+
             // Title
             Text("Henüz kaydın yok")
                 .font(.title2)
                 .fontWeight(.semibold)
                 .foregroundColor(.primary)
-            
+
             // Description
             Text("İlk adımı atmak için bir emoji seç ve ruh halini kaydetmeye başla.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
-            
+
             // CTA Button
             Button(action: onAddEntry) {
                 HStack {

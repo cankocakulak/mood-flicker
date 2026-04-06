@@ -1,6 +1,7 @@
-import SwiftUI
-import SwiftData
 import Charts
+import Combine
+import SwiftData
+import SwiftUI
 
 /// View model for monthly trend chart data
 @MainActor
@@ -8,33 +9,33 @@ class MonthlyTrendChartViewModel: ObservableObject {
     @Published var entries: [MoodEntry] = []
     @Published var isLoading = false
     @Published var error: Error?
-    @Published var currentMonth: Date = Date()
-    
+    @Published var currentMonth: Date = .init()
+
     private let persistenceService: MoodPersistenceService
-    
+
     init(persistenceService: MoodPersistenceService) {
         self.persistenceService = persistenceService
     }
-    
+
     /// Loads mood entries for the current displayed month
     func loadMonthlyEntries() async {
         isLoading = true
         error = nil
-        
+
         do {
             // Calculate date range for the current month
             let calendar = Calendar.current
             let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth))!
             let endOfMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth)!
-            
+
             entries = try await persistenceService.fetchEntries(from: startOfMonth, to: endOfMonth)
         } catch {
             self.error = error
         }
-        
+
         isLoading = false
     }
-    
+
     /// Navigate to previous month
     func goToPreviousMonth() {
         currentMonth = Calendar.current.date(byAdding: .month, value: -1, to: currentMonth) ?? currentMonth
@@ -42,7 +43,7 @@ class MonthlyTrendChartViewModel: ObservableObject {
             await loadMonthlyEntries()
         }
     }
-    
+
     /// Navigate to next month
     func goToNextMonth() {
         let nextMonth = Calendar.current.date(byAdding: .month, value: 1, to: currentMonth) ?? currentMonth
@@ -54,7 +55,7 @@ class MonthlyTrendChartViewModel: ObservableObject {
             }
         }
     }
-    
+
     /// Navigate to current month
     func goToCurrentMonth() {
         currentMonth = Date()
@@ -62,63 +63,62 @@ class MonthlyTrendChartViewModel: ObservableObject {
             await loadMonthlyEntries()
         }
     }
-    
+
     /// Groups entries by day for the line chart
     var dailyData: [MonthlyDayMoodData] {
         let calendar = Calendar.current
         let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: currentMonth))!
         let range = calendar.range(of: .day, in: .month, for: currentMonth)!
         let numberOfDays = range.count
-        
+
         var data: [MonthlyDayMoodData] = []
-        
-        for day in 1...numberOfDays {
+
+        for day in 1 ... numberOfDays {
             guard let dayDate = calendar.date(byAdding: .day, value: day - 1, to: startOfMonth) else { continue }
             let startOfDay = calendar.startOfDay(for: dayDate)
             let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
-            
+
             // Find entries for this day
             let dayEntries = entries.filter { entry in
                 entry.timestamp >= startOfDay && entry.timestamp < endOfDay
             }
-            
+
             // Calculate average mood score for this day
             let avgScore = dayEntries.isEmpty ? nil : Double(dayEntries.reduce(0) { $0 + $1.moodScore }) / Double(dayEntries.count)
-            
+
             data.append(MonthlyDayMoodData(
                 day: day,
                 date: dayDate,
                 entryCount: dayEntries.count,
                 averageMoodScore: avgScore,
-                entries: dayEntries
-            ))
+                entries: dayEntries))
         }
-        
+
         return data
     }
-    
+
     /// Total number of entries in the current month
     var totalEntries: Int {
         entries.count
     }
-    
+
     /// Average mood score across all entries
     var averageMoodScore: Double? {
         guard !entries.isEmpty else { return nil }
         return Double(entries.reduce(0) { $0 + $1.moodScore }) / Double(entries.count)
     }
-    
+
     /// Returns the dominant mood emoji based on entry count
     var dominantMoodEmoji: String? {
         guard !entries.isEmpty else { return nil }
-        
+
         let moodCounts = entries.reduce(into: [:]) { counts, entry in
             counts[entry.emoji, default: 0] += 1
         }
-        
+
         return moodCounts.max(by: { $0.value < $1.value })?.key
     }
-    
+
     /// Returns formatted month name (e.g., "Nisan 2026")
     var formattedMonth: String {
         let formatter = DateFormatter()
@@ -126,13 +126,13 @@ class MonthlyTrendChartViewModel: ObservableObject {
         formatter.locale = Locale(identifier: "tr_TR")
         return formatter.string(from: currentMonth).capitalized
     }
-    
+
     /// Check if current month is the current actual month
     var isCurrentMonth: Bool {
         let calendar = Calendar.current
         return calendar.isDate(currentMonth, equalTo: Date(), toGranularity: .month)
     }
-    
+
     /// Check if next month navigation should be disabled
     var isNextMonthDisabled: Bool {
         let calendar = Calendar.current
@@ -149,7 +149,7 @@ struct MonthlyDayMoodData: Identifiable {
     let entryCount: Int
     let averageMoodScore: Double?
     let entries: [MoodEntry]
-    
+
     /// Returns a color based on the average mood score
     var moodColor: Color {
         guard let score = averageMoodScore else { return .gray.opacity(0.3) }
@@ -162,7 +162,7 @@ struct MonthlyDayMoodData: Identifiable {
         default: return .gray
         }
     }
-    
+
     /// Returns the emoji representing the average mood
     var moodEmoji: String {
         guard let score = averageMoodScore else { return "−" }
@@ -175,7 +175,7 @@ struct MonthlyDayMoodData: Identifiable {
         default: return "−"
         }
     }
-    
+
     /// Formatted day name (e.g., "Pzt")
     var dayName: String {
         let formatter = DateFormatter()
@@ -189,23 +189,23 @@ struct MonthlyDayMoodData: Identifiable {
 struct MonthlyTrendChartView: View {
     @StateObject private var viewModel: MonthlyTrendChartViewModel
     @State private var selectedDay: MonthlyDayMoodData?
-    
+
     init(persistenceService: MoodPersistenceService) {
         _viewModel = StateObject(wrappedValue: MonthlyTrendChartViewModel(persistenceService: persistenceService))
     }
-    
+
     var body: some View {
         VStack(spacing: AppTheme.Spacing.lg) {
             // Month navigation header
             monthNavigationHeader
-            
+
             // Summary cards
             summaryCards
-            
+
             // Chart
             chartView
                 .frame(height: 240)
-            
+
             // Selected day details
             if let selected = selectedDay, selected.entryCount > 0 {
                 dayDetailView(for: selected)
@@ -219,7 +219,7 @@ struct MonthlyTrendChartView: View {
             await viewModel.loadMonthlyEntries()
         }
     }
-    
+
     private var monthNavigationHeader: some View {
         HStack {
             // Previous month button
@@ -233,15 +233,15 @@ struct MonthlyTrendChartView: View {
                     .contentShape(Rectangle())
             }
             .accessibilityLabel("Önceki ay")
-            
+
             Spacer()
-            
+
             // Month label
             VStack(spacing: 4) {
                 Text(viewModel.formattedMonth)
                     .font(.headline)
                     .fontWeight(.semibold)
-                
+
                 if !viewModel.isCurrentMonth {
                     Button("Bugüne Dön") {
                         viewModel.goToCurrentMonth()
@@ -250,9 +250,9 @@ struct MonthlyTrendChartView: View {
                     .foregroundColor(.accentColor)
                 }
             }
-            
+
             Spacer()
-            
+
             // Next month button
             Button(action: {
                 viewModel.goToNextMonth()
@@ -268,7 +268,7 @@ struct MonthlyTrendChartView: View {
         }
         .padding(.horizontal)
     }
-    
+
     private var summaryCards: some View {
         HStack(spacing: AppTheme.Spacing.md) {
             // Total entries card
@@ -277,9 +277,8 @@ struct MonthlyTrendChartView: View {
                 value: "\(viewModel.totalEntries)",
                 subtitle: viewModel.formattedMonth,
                 icon: "chart.bar.fill",
-                color: .blue
-            )
-            
+                color: .blue)
+
             // Average mood card
             if let avgScore = viewModel.averageMoodScore {
                 SummaryCard(
@@ -287,18 +286,16 @@ struct MonthlyTrendChartView: View {
                     value: String(format: "%.1f", avgScore),
                     subtitle: moodDescription(for: avgScore),
                     icon: "face.smiling.fill",
-                    color: moodColor(for: avgScore)
-                )
+                    color: moodColor(for: avgScore))
             } else {
                 SummaryCard(
                     title: "Ortalama",
                     value: "−",
                     subtitle: "Veri yok",
                     icon: "face.smiling.fill",
-                    color: .gray
-                )
+                    color: .gray)
             }
-            
+
             // Dominant mood card
             if let dominantEmoji = viewModel.dominantMoodEmoji {
                 SummaryCard(
@@ -306,51 +303,44 @@ struct MonthlyTrendChartView: View {
                     value: dominantEmoji,
                     subtitle: "Ruh hali",
                     icon: "heart.fill",
-                    color: .pink
-                )
+                    color: .pink)
             } else {
                 SummaryCard(
                     title: "Sık Görülen",
                     value: "−",
                     subtitle: "Veri yok",
                     icon: "heart.fill",
-                    color: .gray
-                )
+                    color: .gray)
             }
         }
     }
-    
+
     private var chartView: some View {
         Chart(viewModel.dailyData) { dayData in
             // Line mark for the trend
             LineMark(
                 x: .value("Gün", dayData.day),
-                y: .value("Ortalama", dayData.averageMoodScore ?? 0)
-            )
-            .foregroundStyle(.blue.opacity(0.6))
-            .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-            
+                y: .value("Ortalama", dayData.averageMoodScore ?? 0))
+                .foregroundStyle(.blue.opacity(0.6))
+                .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+
             // Area mark for visual fill
             AreaMark(
                 x: .value("Gün", dayData.day),
-                y: .value("Ortalama", dayData.averageMoodScore ?? 0)
-            )
-            .foregroundStyle(
-                LinearGradient(
-                    colors: [.blue.opacity(0.2), .blue.opacity(0.02)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            
+                y: .value("Ortalama", dayData.averageMoodScore ?? 0))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.blue.opacity(0.2), .blue.opacity(0.02)],
+                        startPoint: .top,
+                        endPoint: .bottom))
+
             // Point marks for days with data
             if dayData.entryCount > 0 {
                 PointMark(
                     x: .value("Gün", dayData.day),
-                    y: .value("Ortalama", dayData.averageMoodScore ?? 0)
-                )
-                .foregroundStyle(dayData.moodColor)
-                .symbolSize(60)
+                    y: .value("Ortalama", dayData.averageMoodScore ?? 0))
+                    .foregroundStyle(dayData.moodColor)
+                    .symbolSize(60)
             }
         }
         .chartXAxis {
@@ -377,9 +367,9 @@ struct MonthlyTrendChartView: View {
                 }
             }
         }
-        .chartYScale(domain: 0.5...5.5)
+        .chartYScale(domain: 0.5 ... 5.5)
         .chartBackground { chartProxy in
-            GeometryReader { geometry in
+            GeometryReader { _ in
                 Rectangle()
                     .fill(Color.clear)
                     .contentShape(Rectangle())
@@ -393,31 +383,31 @@ struct MonthlyTrendChartView: View {
         .accessibilityLabel("Aylık trend grafiği")
         .accessibilityValue("\(viewModel.totalEntries) kayıt, \(viewModel.formattedMonth)")
     }
-    
+
     private func dayDetailView(for dayData: MonthlyDayMoodData) -> some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
             HStack {
                 Text("\(dayData.day) \(viewModel.formattedMonth)")
                     .font(.headline)
-                
+
                 Spacer()
-                
+
                 Text(dayData.moodEmoji)
                     .font(.title2)
-                
+
                 if let avgScore = dayData.averageMoodScore {
                     Text(String(format: "%.1f", avgScore))
                         .font(.headline)
                         .foregroundColor(dayData.moodColor)
                 }
             }
-            
+
             Text("\(dayData.entryCount) kayıt")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            
+
             Divider()
-            
+
             ForEach(dayData.entries.prefix(5)) { entry in
                 HStack {
                     Text(entry.emoji)
@@ -432,7 +422,7 @@ struct MonthlyTrendChartView: View {
                     }
                 }
             }
-            
+
             if dayData.entries.count > 5 {
                 Text("+\(dayData.entries.count - 5) kayıt daha")
                     .font(.caption)
@@ -444,78 +434,80 @@ struct MonthlyTrendChartView: View {
         .background(Color(.systemGray6))
         .cornerRadius(AppTheme.CornerRadius.md)
     }
-    
+
     private func moodDescription(for score: Double) -> String {
         switch Int(score.rounded()) {
-        case 5: return "Çok iyi"
-        case 4: return "İyi"
-        case 3: return "Orta"
-        case 2: return "Düşük"
-        case 1: return "Zor"
-        default: return "Bilinmiyor"
+        case 5: "Çok iyi"
+        case 4: "İyi"
+        case 3: "Orta"
+        case 2: "Düşük"
+        case 1: "Zor"
+        default: "Bilinmiyor"
         }
     }
-    
+
     private func moodColor(for score: Double) -> Color {
         switch Int(score.rounded()) {
-        case 5: return .green
-        case 4: return .mint
-        case 3: return .yellow
-        case 2: return .orange
-        case 1: return .red
-        default: return .gray
+        case 5: .green
+        case 4: .mint
+        case 3: .yellow
+        case 2: .orange
+        case 1: .red
+        default: .gray
         }
     }
-    
+
     private func moodLabel(for score: Int) -> String {
         switch score {
-        case 1: return "😤"
-        case 2: return "😔"
-        case 3: return "😐"
-        case 4: return "🙂"
-        case 5: return "😊"
-        default: return ""
+        case 1: "😤"
+        case 2: "😔"
+        case 3: "😐"
+        case 4: "🙂"
+        case 5: "😊"
+        default: ""
         }
     }
 }
 
 // MARK: - Preview
 
-#Preview("Monthly Trend Chart - With Data") {
-    let service = MoodPersistenceService.preview()
-    
-    // Add sample data across multiple days in current month
-    Task {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        // Add entries for different days
-        for dayOffset in [0, 1, 3, 5, 7, 10, 14, 20] {
-            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) else { continue }
-            
-            let moods: [MoodOption] = [.happy, .neutral, .sad, .anxious, .angry]
-            let mood = moods[dayOffset % moods.count]
-            
-            let entry = MoodEntry(
-                emoji: mood.rawValue,
-                intensity: Int.random(in: 1...3),
-                tags: ["örnek"],
-                timestamp: date
-            )
-            
-            // Save entry via context
-            let context = ModelContext(service.modelContext.container)
-            context.insert(entry)
-            try? context.save()
-        }
+private enum MonthlyTrendChartPreviewSupport {
+    @MainActor
+    static func viewWithSampleData() -> some View {
+        let service = MoodPersistenceService.preview()
+        return MonthlyTrendChartView(persistenceService: service)
+            .padding()
+            .task {
+                let calendar = Calendar.current
+                let now = Date()
+                for dayOffset in [0, 1, 3, 5, 7, 10, 14, 20] {
+                    guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: now) else { continue }
+                    let moods: [MoodOption] = [.happy, .neutral, .sad, .anxious, .angry]
+                    let mood = moods[dayOffset % moods.count]
+                    let entry = MoodEntry(
+                        emoji: mood.rawValue,
+                        intensity: Int.random(in: 1 ... 3),
+                        tags: ["örnek"],
+                        timestamp: date
+                    )
+                    let context = ModelContext(service.modelContainerForPreview)
+                    context.insert(entry)
+                    try? context.save()
+                }
+            }
     }
-    
-    return MonthlyTrendChartView(persistenceService: service)
-        .padding()
+
+    @MainActor
+    static func emptyView() -> some View {
+        MonthlyTrendChartView(persistenceService: MoodPersistenceService.preview())
+            .padding()
+    }
+}
+
+#Preview("Monthly Trend Chart - With Data") {
+    MonthlyTrendChartPreviewSupport.viewWithSampleData()
 }
 
 #Preview("Monthly Trend Chart - Empty") {
-    let service = MoodPersistenceService.preview()
-    return MonthlyTrendChartView(persistenceService: service)
-        .padding()
+    MonthlyTrendChartPreviewSupport.emptyView()
 }

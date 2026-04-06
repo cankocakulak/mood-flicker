@@ -7,7 +7,7 @@ struct AppContainer {
     let networkClient: NetworkClient
     let logger: AppLogger
     let keyValueStore: KeyValueStore
-    
+
     /// Creates a MoodPersistenceService with the given model container
     /// - Parameter modelContainer: The SwiftData model container
     /// - Returns: Configured MoodPersistenceService

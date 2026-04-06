@@ -10,38 +10,40 @@ enum MoodTag: String, CaseIterable, Identifiable {
     case productive = "üretken"
     case social = "sosyal"
     case sleepless = "uykusuz"
-    
-    var id: String { rawValue }
-    
+
+    var id: String {
+        rawValue
+    }
+
     /// Display label for the tag
     var displayLabel: String {
         rawValue.capitalized
     }
-    
+
     /// Accessibility label for VoiceOver
     var accessibilityLabel: String {
         "\(displayLabel) etiketi"
     }
-    
+
     /// Returns a color associated with this tag for visual distinction
     var tagColor: Color {
         switch self {
         case .tired:
-            return .gray
+            .gray
         case .energetic:
-            return .orange
+            .orange
         case .anxious:
-            return .purple
+            .purple
         case .calm:
-            return .teal
+            .teal
         case .stressed:
-            return .red
+            .red
         case .productive:
-            return .green
+            .green
         case .social:
-            return .blue
+            .blue
         case .sleepless:
-            return .indigo
+            .indigo
         }
     }
 }
@@ -53,24 +55,24 @@ struct TagChipsView: View {
     @Binding var selectedTags: Set<String>
     let selectedMood: MoodOption?
     let maxSelectionCount: Int = 3
-    
+
     @State private var shakeTrigger: Bool = false
     @State private var showToast: Bool = false
     @State private var toastMessage: String = ""
-    
+
     private let chipHeight: CGFloat = 36
     private let chipPadding: CGFloat = 16
-    
+
     /// Computed property that returns tags ordered by suggestions for the current mood
     private var orderedTags: [MoodTag] {
         TagSuggestionEngine.suggestions(for: selectedMood)
     }
-    
+
     /// Primary suggestions for highlighting
     private var primarySuggestions: [MoodTag] {
         TagSuggestionEngine.primarySuggestions(for: selectedMood)
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
             // Section header with suggestion indicator
@@ -80,24 +82,24 @@ struct TagChipsView: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(.secondary)
-                    
+
                     // Show suggestion hint when mood is selected
                     if selectedMood != nil {
-                        Text("Sana önerilenler: \(primarySuggestions.map { $0.displayLabel }.joined(separator: ", "))")
+                        Text("Sana önerilenler: \(primarySuggestions.map(\.displayLabel).joined(separator: ", "))")
                             .font(.caption)
-                            .foregroundStyle(.accent)
+                            .foregroundStyle(Color.accentColor)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 // Selection count indicator
                 Text("\(selectedTags.count)/\(maxSelectionCount)")
                     .font(.caption)
                     .foregroundStyle(selectedTags.count >= maxSelectionCount ? .orange : .secondary)
                     .fontWeight(selectedTags.count >= maxSelectionCount ? .semibold : .regular)
             }
-            
+
             // Horizontal scrollable tag chips
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: AppTheme.Spacing.sm) {
@@ -109,51 +111,39 @@ struct TagChipsView: View {
                 .padding(.vertical, AppTheme.Spacing.xs)
             }
         }
-        .overlay(
-            // Toast overlay
-            toastOverlay
-                .animation(.easeInOut(duration: 0.2), value: showToast)
-        )
-    }
-    
-    private var toastOverlay: some View {
-        Group {
+        .overlay(alignment: .bottom) {
             if showToast {
-                VStack {
-                    Spacer()
-                    
-                    Text(toastMessage)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, AppTheme.Spacing.md)
-                        .padding(.vertical, AppTheme.Spacing.sm)
-                        .background(
-                            Capsule()
-                                .fill(Color.black.opacity(0.8))
-                        )
-                        .padding(.bottom, AppTheme.Spacing.lg)
-                }
-                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                Text(toastMessage)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, AppTheme.Spacing.md)
+                    .padding(.vertical, AppTheme.Spacing.sm)
+                    .background(
+                        Capsule()
+                            .fill(Color.black.opacity(0.8)))
+                    .padding(.bottom, AppTheme.Spacing.lg)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
+        .animation(.easeInOut(duration: 0.2), value: showToast)
     }
-    
+
     private func tagChip(for tag: MoodTag) -> some View {
         let isSelected = selectedTags.contains(tag.rawValue)
         let isSuggested = primarySuggestions.contains(tag)
-        
+
         return Button(action: {
             toggleTag(tag)
         }) {
             HStack(spacing: 4) {
                 // Show star icon for suggested tags
-                if isSuggested && !isSelected {
+                if isSuggested, !isSelected {
                     Image(systemName: "sparkles")
                         .font(.caption2)
                         .foregroundStyle(tag.tagColor)
                 }
-                
+
                 Text(tag.displayLabel)
                     .font(.subheadline)
                     .fontWeight(isSelected ? .semibold : .medium)
@@ -163,15 +153,12 @@ struct TagChipsView: View {
             .frame(height: chipHeight)
             .background(
                 Capsule()
-                    .fill(isSelected ? tag.tagColor : Color.clear)
-            )
+                    .fill(isSelected ? tag.tagColor : Color.clear))
             .overlay(
                 Capsule()
                     .stroke(
                         isSelected ? Color.clear : (isSuggested ? tag.tagColor.opacity(0.5) : Color.gray.opacity(0.3)),
-                        lineWidth: isSuggested ? 2 : 1.5
-                    )
-            )
+                        lineWidth: isSuggested ? 2 : 1.5))
         }
         .buttonStyle(PlainButtonStyle())
         .modifier(ShakeEffect(animatableData: shakeTrigger ? 1 : 0))
@@ -180,7 +167,7 @@ struct TagChipsView: View {
         .accessibilityHint(isSuggested ? "Bu etiket ruh haline göre önerildi. Seçmek veya seçimi kaldırmak için dokun." : "Seçmek veya seçimi kaldırmak için dokun.")
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
-    
+
     private func toggleTag(_ tag: MoodTag) {
         if selectedTags.contains(tag.rawValue) {
             // Deselect
@@ -203,7 +190,7 @@ struct TagChipsView: View {
             }
         }
     }
-    
+
     private func triggerShake() {
         shakeTrigger.toggle()
         // Reset after animation completes
@@ -211,11 +198,11 @@ struct TagChipsView: View {
             shakeTrigger = false
         }
     }
-    
+
     private func showToastMessage(_ message: String) {
         toastMessage = message
         showToast = true
-        
+
         // Hide toast after delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             withAnimation {
@@ -230,7 +217,7 @@ struct TagChipsView: View {
 /// A view modifier that applies a shake animation
 struct ShakeEffect: GeometryEffect {
     var animatableData: CGFloat
-    
+
     func effectValue(size: CGSize) -> ProjectionTransform {
         // Shake 10 times with decreasing amplitude
         let shakeAmount = sin(animatableData * .pi * 10) * (1 - animatableData) * 8

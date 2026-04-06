@@ -4,14 +4,14 @@ import SwiftUI
 /// Shows streak count with positive messaging, hides after 24h if streak breaks
 struct StreakView: View {
     let streakInfo: StreakCalculator.StreakInfo
-    
+
     @State private var isAnimating = false
-    
+
     var body: some View {
         if streakInfo.shouldHide {
             // Hidden - show nothing
             EmptyView()
-        } else if !streakInfo.isActive && streakInfo.currentStreak == 0 {
+        } else if !streakInfo.isActive, streakInfo.currentStreak == 0 {
             // No streak yet - show gentle encouragement
             gentleStartView
         } else {
@@ -19,21 +19,21 @@ struct StreakView: View {
             streakCard
         }
     }
-    
+
     // MARK: - Views
-    
+
     private var streakCard: some View {
         VStack(spacing: AppTheme.Spacing.md) {
             HStack(spacing: AppTheme.Spacing.lg) {
                 // Streak icon with flame animation
                 streakIcon
-                
+
                 VStack(alignment: .leading, spacing: AppTheme.Spacing.xs) {
                     // Streak count
                     Text("\(streakInfo.currentStreak) gün")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(streakInfo.isActive ? .primary : .secondary)
-                    
+
                     // Status message
                     if let message = streakInfo.displayMessage {
                         Text(message)
@@ -42,24 +42,24 @@ struct StreakView: View {
                             .lineLimit(1)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 // Status indicator
                 statusIndicator
             }
-            
+
             // Last entry info (subtle)
             if let lastDate = streakInfo.lastEntryDate {
                 HStack {
                     Image(systemName: "clock")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
-                    
+
                     Text("Son kayıt: \(StreakCalculator.timeAgoString(from: lastDate))")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
-                    
+
                     Spacer()
                 }
             }
@@ -67,12 +67,10 @@ struct StreakView: View {
         .padding(AppTheme.Spacing.lg)
         .background(
             RoundedRectangle(cornerRadius: AppTheme.CornerRadius.card)
-                .fill(streakInfo.isActive ? streakBackgroundColor : Color(.secondarySystemGroupedBackground))
-        )
+                .fill(streakInfo.isActive ? streakBackgroundColor : Color(.secondarySystemGroupedBackground)))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.CornerRadius.card)
-                .stroke(streakInfo.isActive ? streakBorderColor : Color.clear, lineWidth: 1)
-        )
+                .stroke(streakInfo.isActive ? streakBorderColor : Color.clear, lineWidth: 1))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(streakInfo.accessibilityLabel)
         .onAppear {
@@ -83,14 +81,14 @@ struct StreakView: View {
             }
         }
     }
-    
+
     private var streakIcon: some View {
         ZStack {
             // Background circle
             Circle()
                 .fill(streakInfo.isActive ? streakIconBackground : Color(.tertiarySystemFill))
                 .frame(width: 56, height: 56)
-            
+
             // Flame icon
             Image(systemName: streakInfo.isActive ? "flame.fill" : "flame")
                 .font(.system(size: 28))
@@ -99,7 +97,7 @@ struct StreakView: View {
                 .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: isAnimating)
         }
     }
-    
+
     private var statusIndicator: some View {
         Group {
             if streakInfo.isActive {
@@ -108,7 +106,7 @@ struct StreakView: View {
                     Circle()
                         .fill(Color.green)
                         .frame(width: 8, height: 8)
-                    
+
                     Text("Aktif")
                         .font(.caption)
                         .fontWeight(.medium)
@@ -119,7 +117,7 @@ struct StreakView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "pause.circle")
                         .font(.caption)
-                    
+
                     Text("Durakladı")
                         .font(.caption)
                         .fontWeight(.medium)
@@ -128,41 +126,40 @@ struct StreakView: View {
             }
         }
     }
-    
+
     private var gentleStartView: some View {
         HStack(spacing: AppTheme.Spacing.md) {
             Image(systemName: "sparkles")
                 .font(.title3)
                 .foregroundStyle(.secondary)
-            
+
             Text("İlk streak'ini başlatmak için bir kayıt yap")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            
+
             Spacer()
         }
         .padding(AppTheme.Spacing.lg)
         .background(
             RoundedRectangle(cornerRadius: AppTheme.CornerRadius.card)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
+                .fill(Color(.secondarySystemGroupedBackground)))
         .accessibilityLabel("Henüz streak başlatılmadı. İlk kaydı yaparak başlayabilirsin.")
     }
-    
+
     // MARK: - Colors
-    
+
     private var streakBackgroundColor: Color {
         Color.orange.opacity(0.08)
     }
-    
+
     private var streakBorderColor: Color {
         Color.orange.opacity(0.2)
     }
-    
+
     private var streakIconBackground: Color {
         Color.orange.opacity(0.15)
     }
-    
+
     private var streakIconColor: Color {
         Color.orange
     }
